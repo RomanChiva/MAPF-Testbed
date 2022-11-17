@@ -23,8 +23,19 @@ class DistributedPlanningSolver(object):
         self.map = my_map
         self.starts = starts
         self.goals = goals
+
+        self.heuristics = []
+        for goal in self.goals:
+            self.heuristics.append(compute_heuristics(my_map, goal))
+
+        self.paths = []
+        for i in range(len(self.goals)):  # Find initial path for each agent
+            path = a_star(self.map, self.starts[i], self.goals[i], self.heuristics[i],
+                          i,[])
+            if path is None:
+                raise BaseException('No solutions')
+            self.paths.append(path)
         
-        # T.B.D.
         
 
     def agent_take_action(self, agent, current_map):
@@ -67,12 +78,11 @@ class DistributedPlanningSolver(object):
         """
         # Initialize constants       
         start_time = timer.time()
-        result = []
         searching = True
         
 
         # Spawn Agents
-        agents = [AircraftDistributed(self.starts[i], self.goals[i],i) for i in range(len(self.goals))]
+        agents = [AircraftDistributed(self.starts[i], self.goals[i],self.paths[i],i) for i in range(len(self.goals))]
 
         # Random Activation Scheduler
         while searching:
