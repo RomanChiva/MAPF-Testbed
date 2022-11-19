@@ -69,7 +69,7 @@ def build_constraint_table(constraints, agent):
             table.append((constraint['loc'], constraint['timestep']))
             times.append(constraint['timestep'])
         # Goal Constraints
-        if type(constraint['timestep']) != int:
+        if constraint['agent'] == agent and type(constraint['timestep']) != int:
             goals_avoid.append((constraint['loc'], constraint['timestep'][0]))
 
 
@@ -153,7 +153,6 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     #           rather than space domain, only.
     
     # Load Constraints
-    
     constraint_table, latest_time, goals_avoid = build_constraint_table(constraints, agent)
     # Create Open and Closed List and calculate heuristics
     open_list = []
@@ -169,25 +168,23 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
         curr = pop_node(open_list)
         #############################
         # Task 1.4: Adjust the goal test condition to handle goal constraints
-        
-        if curr['loc'] == goal_loc and curr['timestep'] > latest_time:
+        if curr['loc'] == goal_loc:# and curr['timestep'] >= latest_time:
                 return get_path(curr)
                 # ENd here, path completed
 
         # Generate Goal Constraints and add them to the table on the spot
 
         for const in goals_avoid:
-            if const[1] > curr['timestep']:
-                constraint_table.append((const[0], curr['timestep']))
+            if const[1] <= curr['timestep']:
+                constraint_table.append((const[0], curr['timestep']+1))
 
-
+        
         for dir in range(5):
 
             # CHECK MOVE IS LEGAL
             ###################################################
             # Checks place u moving to is in the map
             child_loc = move(curr['loc'], dir)
-            
             # Within Bounds
             x_good =  0 <= child_loc[0] <= len(my_map) -1
             y_good =  0 <= child_loc[1] <= len(my_map[0]) -1
@@ -204,7 +201,7 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
                 continue
             ####################################################
 
-
+            
             # Create child node info
             child = {'loc': child_loc,
                     'g_val': curr['g_val'] + 1,
@@ -212,7 +209,7 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
                     'timestep':curr['timestep']+1,
                     'parent': curr}
 
-
+            # Feels like the heuristic stops working at some point
             if (child['loc']) in closed_list:
                 existing_node = closed_list[(child['loc'], child['timestep'])]
                 if compare_nodes(child, existing_node):

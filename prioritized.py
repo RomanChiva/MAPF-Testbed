@@ -57,6 +57,7 @@ class PrioritizedPlanningSolver(object):
                         # Goal Constraint
                         if timestep == len(path)-1:
                             constraints.append({'agent':agent_id, 'loc':[coordinate], 'timestep':[timestep]})
+                            
                         
 
                 
