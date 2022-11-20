@@ -162,11 +162,9 @@ class CBSSolver(object):
 
             # Pop node from OPEN List with the least cost
             p = self.pop_node()
-
+            print('Popped Node:',p['paths'],p['collisions'])
             # Check if collision free
             if len(p['collisions']) == 0:
-                print(p['collisions'])
-                print(detect_collisions(p['paths']))
                 return p['paths']
             # ======================================
             # Collisions have been found thus continue geenrating new nodes
@@ -179,14 +177,17 @@ class CBSSolver(object):
             # New node enforcing each of the generated constraints
             for constraint in constraints:
                 # NEW NODE Q
-                q = {}
+
+                q = { 'cost': 0,
+                      'constraints': [],
+                      'paths': [],
+                      'collisions': [] }
                 
                 # Inherit constraints from p and add the new one
-                q['constraints'] = p['constraints']
+                q['constraints'] = p['constraints'][:]
                 q['constraints'].append(constraint)
-                print(len(q['constraints']))
                 # Inherit paths
-                q['paths'] = p['paths']
+                q['paths'] = p['paths'][:]
                 
                 # Find new path for agent involved in the collision we are trying to avoid
                 agent_id = constraint['agent']
@@ -201,6 +202,7 @@ class CBSSolver(object):
                     q['collisions'] = detect_collisions(q['paths'])
                     q['cost'] = get_sum_of_cost(q['paths'])
                     self.push_node(q)
+                    print('Pushed Node:',q['paths'], q['collisions'])
         
         return None
 
