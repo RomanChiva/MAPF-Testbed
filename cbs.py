@@ -46,10 +46,9 @@ def detect_collisions(paths):
     for path1, path2 in itertools.combinations(paths, 2):
         collision = detect_collision(path1, path2)
         if collision != None:
-            print('Collision!!:',paths.index(path1),paths.index(path2))
             collisions.append({'IDs':[paths.index(path1),paths.index(path2)], 'loc':collision[0], 'timestep':collision[1]})
         else:
-            print('No Collision:',paths.index(path1),paths.index(path2))
+            pass
     return collisions
 
 def standard_splitting(collision):
@@ -110,16 +109,16 @@ class CBSSolver(object):
 
     def push_node(self, node):
         heapq.heappush(self.open_list, (node['cost'], len(node['collisions']), self.num_of_generated ,node))
-        print("Generate node {}".format(self.num_of_generated))
+        # print("Generate node {}".format(self.num_of_generated))
         self.num_of_generated += 1
 
     def pop_node(self):
         _, _, id, node = heapq.heappop(self.open_list)
-        print("Expand node {}".format(id))
+        # print("Expand node {}".format(id))
         self.num_of_expanded += 1
         return node
 
-    def find_solution(self, disjoint=True):
+    def find_solution(self, disjoint=False):
         """ Finds paths for all agents from their start locations to their goal locations
 
         disjoint    - use disjoint splitting or not
@@ -162,7 +161,6 @@ class CBSSolver(object):
 
             # Pop node from OPEN List with the least cost
             p = self.pop_node()
-            print('Popped Node:',p['paths'],p['collisions'])
             # Check if collision free
             if len(p['collisions']) == 0:
                 return p['paths']
@@ -202,7 +200,7 @@ class CBSSolver(object):
                     q['collisions'] = detect_collisions(q['paths'])
                     q['cost'] = get_sum_of_cost(q['paths'])
                     self.push_node(q)
-                    print('Pushed Node:',q['paths'], q['collisions'])
+                    
         
         return None
 

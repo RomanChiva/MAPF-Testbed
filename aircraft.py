@@ -112,7 +112,7 @@ class AircraftDistributed(object):
             if all([obstacle == 1 for obstacle in obstacle_vector]):
                 self.trajectory.append(self.position)
                 return False
-                
+            
             # Calculate unit vector for directions
             heading = self.unit_vector()
             # Preferences: How much each direction is prefered from -1 to 1 using inner product

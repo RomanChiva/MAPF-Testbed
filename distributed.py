@@ -110,9 +110,9 @@ class DistributedPlanningSolver(object):
 
         self.CPU_time = timer.time() - start_time
         # Print final output
-        print("\n Found a solution! \n")
-        print("CPU time (s):    {:.2f}".format(self.CPU_time))
-        print("Sum of costs:    {}".format(get_sum_of_cost(result)))  # Hint: think about how cost is defined in your implementation
-        print(result)
+        # print("\n Found a solution! \n")
+        # print("CPU time (s):    {:.2f}".format(self.CPU_time))
+        # print("Sum of costs:    {}".format(get_sum_of_cost(result)))  # Hint: think about how cost is defined in your implementation
+        # print(result)
         
         return result  # Hint: this should be the final result of the distributed planning (visualization is done after planning)
