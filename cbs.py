@@ -22,16 +22,14 @@ def detect_collision(path1, path2):
         if get_location(path1, timestep) == get_location(path2, timestep):
             return ([get_location(path1, timestep)], timestep)
 
-        # Check Edge collision
-        if timestep != 0:
-    
-            p1t0 = get_location(path1, timestep-1)
-            p1t1 = get_location(path1, timestep)
-            p2t0 = get_location(path2, timestep-1)
-            p2t1 = get_location(path2, timestep)
+        
+        p1t0 = get_location(path1, timestep)
+        p1t1 = get_location(path1, timestep+1)
+        p2t0 = get_location(path2, timestep)
+        p2t1 = get_location(path2, timestep+1)
 
-            if p1t0 == p2t1 and p1t1 == p2t0:
-                return ([p1t0, p1t1], timestep)
+        if p1t0 == p2t1 and p1t1 == p2t0:
+            return ([p1t0, p1t1], timestep+1)
                 
     return None        
 
@@ -48,8 +46,10 @@ def detect_collisions(paths):
     for path1, path2 in itertools.combinations(paths, 2):
         collision = detect_collision(path1, path2)
         if collision != None:
+            print('Collision!!:',paths.index(path1),paths.index(path2))
             collisions.append({'IDs':[paths.index(path1),paths.index(path2)], 'loc':collision[0], 'timestep':collision[1]})
-
+        else:
+            print('No Collision:',paths.index(path1),paths.index(path2))
     return collisions
 
 def standard_splitting(collision):
@@ -61,9 +61,8 @@ def standard_splitting(collision):
     #           Edge collision: the first constraint prevents the first agent to traverse the specified edge at the
     #                          specified timestep, and the second constraint prevents the second agent to traverse the
     #                          specified edge at the specified timestep
-
-
-    # Figure out wether this is a vertex or an edge constraint
+    
+    # Mod one constraint into two constraints
     constraints = [{'agent':collision['IDs'][0], 'loc':collision['loc'], 'timestep':collision['timestep']},
                    {'agent':collision['IDs'][1], 'loc':collision['loc'][::-1], 'timestep':collision['timestep']},]
     return constraints
@@ -164,12 +163,10 @@ class CBSSolver(object):
             # Pop node from OPEN List with the least cost
             p = self.pop_node()
 
-            # Print Relevant Info
-            print('PASS {a}, COST:{b} '.format(a = self.passes, b = p['cost']))
-            print(p['collisions'])
-
             # Check if collision free
             if len(p['collisions']) == 0:
+                print(p['collisions'])
+                print(detect_collisions(p['paths']))
                 return p['paths']
             # ======================================
             # Collisions have been found thus continue geenrating new nodes
@@ -187,6 +184,7 @@ class CBSSolver(object):
                 # Inherit constraints from p and add the new one
                 q['constraints'] = p['constraints']
                 q['constraints'].append(constraint)
+                print(len(q['constraints']))
                 # Inherit paths
                 q['paths'] = p['paths']
                 

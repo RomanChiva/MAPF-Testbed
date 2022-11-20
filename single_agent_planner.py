@@ -141,7 +141,33 @@ def compare_nodes(n1, n2):
     return n1['g_val'] + n1['h_val'] < n2['g_val'] + n2['h_val']
 
 
-def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
+
+def illegal(location,timestep,dir,my_map,constraint_table):
+
+    # CHECK MOVE IS LEGAL
+    ###################################################
+    # Checks place u moving to is in the map
+    child_loc = move(location, dir)
+    # Within Bounds
+    x_good =  0 <= child_loc[0] <= len(my_map) -1
+    y_good =  0 <= child_loc[1] <= len(my_map[0]) -1
+
+    if x_good + y_good < 2:
+        return True
+
+    # Not Obstacle
+    if my_map[child_loc[0]][child_loc[1]]:
+        return True
+
+    # Check any constraint violations
+    if is_constrained(location, child_loc, timestep, constraint_table):
+        return True
+    # Move is legal
+    return False
+
+
+
+def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints, inner=False, goals_avoid = None, latest_time= None):
     """ my_map      - binary obstacle map
         start_loc   - start position
         goal_loc    - goal position
@@ -153,7 +179,12 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     #           rather than space domain, only.
     
     # Load Constraints
-    constraint_table, latest_time, goals_avoid = build_constraint_table(constraints, agent)
+    if inner:
+        constraint_table = constraints
+        latest_time = latest_time
+        goals_avoid = goals_avoid
+    else:
+        constraint_table, latest_time, goals_avoid = build_constraint_table(constraints, agent)
     # Create Open and Closed List and calculate heuristics
     open_list = []
     closed_list = dict()
@@ -169,8 +200,35 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
         #############################
         # Task 1.4: Adjust the goal test condition to handle goal constraints
         if curr['loc'] == goal_loc:# and curr['timestep'] >= latest_time:
-                return get_path(curr)
-                # ENd here, path completed
+                path = get_path(curr)
+
+                if curr['timestep'] >= latest_time:
+                    return path
+
+                else:
+                    
+                    timestep = len(path)
+                    location = path[-1]
+                    
+                    while not is_constrained(location,location, timestep,constraint_table):
+                        path.append(location)
+                        if len(path) >= latest_time:
+                            return path
+                        timestep +=1
+                    
+                    for dir in range(5):
+                        if illegal(location, timestep, dir, my_map, constraint_table):
+                            continue
+                        location = move(location, dir)
+                        break
+                    # Path to go back to goal
+                    constraint_table_mod = [(x[0],x[1]-timestep) for x in constraint_table]
+                    goals_avoid_mod = [(x[0],x[1]-timestep) for x in goals_avoid]
+                    latest_time_mod = latest_time - timestep
+                    sub_path = a_star(my_map, location,goal_loc,h_values,agent,constraint_table_mod,inner=True,goals_avoid=goals_avoid_mod,latest_time=latest_time_mod)
+                    return path + sub_path
+                    
+                                
 
         # Generate Goal Constraints and add them to the table on the spot
 
@@ -180,28 +238,11 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
 
         
         for dir in range(5):
-
-            # CHECK MOVE IS LEGAL
-            ###################################################
-            # Checks place u moving to is in the map
-            child_loc = move(curr['loc'], dir)
-            # Within Bounds
-            x_good =  0 <= child_loc[0] <= len(my_map) -1
-            y_good =  0 <= child_loc[1] <= len(my_map[0]) -1
-
-            if x_good + y_good < 2:
+            if illegal(curr['loc'],curr['timestep']+1, dir, my_map, constraint_table):
                 continue
-
-            # Not Obstacle
-            if my_map[child_loc[0]][child_loc[1]]:
-                continue
-
-            # Check any constraint violations
-            if is_constrained(curr['loc'], child_loc, curr['timestep']+1, constraint_table):
-                continue
-            ####################################################
-
             
+            child_loc = move(curr['loc'],dir)
+
             # Create child node info
             child = {'loc': child_loc,
                     'g_val': curr['g_val'] + 1,
@@ -222,5 +263,6 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
                 push_node(open_list, child)
 
             
+    
 
-    return None  # Failed to find solutions
+    return   # Failed to find solutions
